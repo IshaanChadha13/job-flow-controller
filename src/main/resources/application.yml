@@ -1,0 +1,38 @@
+server:
+  port: 8083
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/capstone"
+    username: capstone
+    password: MyCapstonePassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: jfc-consumer-group
+
+kafka:
+  topics:
+    scan-request-topic: scan-request-topic
+    scan-pull-topic: scan-pull-topic
+    scan-parse-topic: scan-parse-topic
+    jfc-parser-topic: jfc-parser-topic
+    update-state-topic: update-state-topic
+    jfc-bg-job-topic: jfc-bg-job-topic
+    jfc-jobs: jfc-jobs
+    job-acknowledgement-topic: job-acknowledgement-topic
+
+    # For demonstration
+    partition-count: 1
+    replication-factor: 1
+
+logging:
+  level:
+    org.springframework.kafka: INFO
+    com.example.jfc: DEBUG
