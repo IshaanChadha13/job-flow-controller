@@ -93,6 +93,7 @@ public class SchedulingService {
                 case UPDATE_FINDING -> eventObject = objectMapper.readValue(rawJson, UpdateAlertEvent.class);
                 case CREATE_TICKET -> eventObject = objectMapper.readValue(rawJson, CreateTicketRequestEvent.class);
                 case TRANSITION_TICKET -> eventObject = objectMapper.readValue(rawJson, TransitionTicketRequestEvent.class);
+                case NEW_SCAN -> eventObject = objectMapper.readValue(rawJson, NewScanRunbookEvent.class);
                 default -> {
                     System.out.println("[SchedulingService] Unknown eventType => " + eventType);
                     return;

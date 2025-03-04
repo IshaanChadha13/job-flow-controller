@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class JfcJobsConsumer {
 
@@ -24,11 +23,6 @@ public class JfcJobsConsumer {
         this.objectMapper = new ObjectMapper();
     }
 
-    /**
-     * Single consumer for the "jfc-jobs" topic.
-     * We detect the event "type" field to see if it's SCAN_PULL, SCAN_PARSE, or UPDATE_FINDING,
-     * then parse the appropriate DTO and store in the DB with a recognized JobCategory.
-     */
     @KafkaListener(topics = "${kafka.topics.jfc-jobs}", groupId = "${spring.kafka.consumer.group-id}")
     public void onJfcJobMessage(String message) {
         try {
@@ -40,6 +34,7 @@ public class JfcJobsConsumer {
                 case UPDATE_FINDING -> handleUpdateFinding(message);
                 case CREATE_TICKET -> handleCreateTicket(message);
                 case TRANSITION_TICKET -> handleTransitionTicket(message);
+                case NEW_SCAN -> handleNewScan(message);
                 default -> {
                     System.out.println("[JFC] Unknown event type => " + eventType);
                 }
@@ -177,5 +172,27 @@ public class JfcJobsConsumer {
 
         System.out.printf("[JFC] Received TICKETING_TRANSITION => eventId=%s, tenantId=%d, destTopic=%s%n",
                 eventId, event.getPayload().getTenantId(), event.getDestinationTopic());
+    }
+
+    private void handleNewScan(String message) throws Exception {
+        // parse into NewScanRunbookEvent (the new event)
+        NewScanRunbookEvent event = objectMapper.readValue(message, NewScanRunbookEvent.class);
+        NewScanRunbookPayload payload = event.getPayload();
+        String eventId = event.getEventId();
+
+        // Create a new job entity in DB
+        JobEntity jobEntity = new JobEntity(
+                eventId,
+                JobCategory.NEW_SCAN, // might need a new enum member in JobCategory
+                payload.getTenantId(),
+                message
+        );
+        jobEntity.setStatus(JobStatus.NEW);
+        jobEntity.setDestinationTopic(event.getDestinationTopic());
+
+        jobRepository.save(jobEntity);
+
+        System.out.printf("[JFC] Received NEW_SCAN => eventId=%s, tenantId=%d, newFindings=%d%n",
+                eventId, payload.getTenantId(), payload.getNewFindingIds().size());
     }
 }

@@ -13,5 +13,7 @@ public enum JobCategory {
     UPDATE_FINDING,
 
     CREATE_TICKET,
-    TRANSITION_TICKET
+    TRANSITION_TICKET,
+
+    NEW_SCAN
 }
